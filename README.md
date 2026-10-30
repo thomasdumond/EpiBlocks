@@ -52,18 +52,17 @@ Connect Cloud runs regular R, so everything works, including deSolve.
 
 1. Put this folder in a **public GitHub repository** (the free plan deploys
    from public repositories).
-2. Create the deployment file that tells Connect Cloud which packages to
-   install. In R, from the project folder:
-   ```r
-   install.packages("rsconnect")
-   rsconnect::writeManifest(appPrimaryDoc = "app.R")
-   ```
-   Commit the new `manifest.json` and push it. Run this again whenever you
-   add or update a package.
+2. Connect Cloud reads the package list and R version from **`renv.lock`**,
+   which is already in the repository, so no extra file is needed. Do **not**
+   add a `manifest.json`: if both exist, Connect Cloud uses `manifest.json`
+   and ignores `renv.lock`.
 3. Go to <https://connect.posit.cloud>, sign in with GitHub, choose
    **Publish → Shiny**, select the repository, the branch and `app.R`, then
    **Publish**.
 4. Share the link. Every push to GitHub can redeploy the app.
+
+After adding or updating a package, run `renv::snapshot()` and push the
+updated `renv.lock`.
 
 The app uses no local file paths and needs no secrets.
 
@@ -219,5 +218,5 @@ formula is then evaluated in an environment that contains only those
 functions and whose parent is the empty environment.
 
 **Package versions** are locked with renv (`renv.lock`, R 4.3.1). After
-adding a package, run `renv::snapshot()` (and `rsconnect::writeManifest()` for
-Connect Cloud).
+adding a package, run `renv::snapshot()`; Connect Cloud deploys from
+`renv.lock` directly.

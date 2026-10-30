@@ -8,6 +8,9 @@ Users draw boxes (compartments) and arrows (flows), give each arrow a rate,
 and the app writes the differential equations, finds the parameters, solves
 the model and plots the epicurve. No coding needed.
 
+**▶ Try it online: <https://thomasdumond-epiblocks.share.connect.posit.cloud/>**
+(the first visit after a quiet period can take 30–60 s while the app wakes up)
+
 > Beta version: tested by colleagues first, then used in a workshop.
 > Feedback is very welcome.
 

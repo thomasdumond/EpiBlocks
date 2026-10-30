@@ -1,0 +1,2 @@
+# Third-party code: do not count it in GitHub language stats
+www/mathjax/** linguist-vendored

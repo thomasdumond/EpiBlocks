@@ -1,6 +1,24 @@
+# RStudio / R session files
 .Rproj.user/
 .Rhistory
 .RData
 .Ruserdata
-.claude/
+
+# Secrets and credentials: never commit these
+.Renviron
+.env
+.env.*
+.httr-oauth
+.secrets/
+*.pem
+*.key
+*.p12
+
+# Deployment account info written by rsconnect (manifest.json IS committed)
 rsconnect/
+
+# Local tools and OS files
+.claude/
+.DS_Store
+Thumbs.db
+desktop.ini

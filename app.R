@@ -106,6 +106,7 @@ ui <- page_sidebar(
       )
     ),
     uiOutput("model_info"),
+    uiOutput("open_buttons"),   # "+ Source" / "+ Sink" (server_canvas.R)
     visNetworkOutput("net", height = "430px")
   ),
   navset_card_tab(

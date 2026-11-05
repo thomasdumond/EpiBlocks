@@ -47,6 +47,23 @@ server_editor <- function(input, output, session, rv, proxy) {
       ))
     }
 
+    if (identical(s$type, "special")) {
+      is_source <- identical(s$id, SOURCE_ID)
+      return(tagList(
+        h5(icon(if (is_source) "right-to-bracket" else "right-from-bracket"),
+           if (is_source) " Source" else " Sink"),
+        p(class = "small",
+          if (is_source) {
+            "Arrows drawn from the Source bring animals into the model (births, restocking, immigration)."
+          } else {
+            "Arrows drawn into the Sink take animals out of the model (deaths, culling, harvest, emigration)."
+          }),
+        actionButton("special_delete", "Remove from diagram", icon = icon("trash"),
+                     class = "btn-sm btn-outline-danger"),
+        p(class = "text-muted small mt-2", "Its arrows are removed too.")
+      ))
+    }
+
     if (identical(s$type, "edge")) {
       i <- match(s$id, model$flows$id)
       if (is.na(i)) return(editor_hint())
@@ -263,6 +280,8 @@ editor_hint <- function() {
     p("Click a box to rename it or set its initial value."),
     p("Click an arrow to choose its type and edit its rate."),
     p("Use ", strong("Add compartment"), " and ", strong("Draw flow"),
-      " at the top of the diagram to build your model.")
+      " at the top of the diagram to build your model."),
+    p("Models are closed by default. Add a ", strong("Source"), " or a ",
+      strong("Sink"), " for births or deaths.")
   )
 }

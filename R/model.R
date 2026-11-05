@@ -17,6 +17,9 @@
 #                   infectious  for infection flows: ids of the infectious
 #                               compartments, comma separated
 #   params        named numeric vector of parameter values
+#   special       which of "SOURCE" / "SINK" are on the diagram. Empty for
+#                 a closed model (the default); users add them for births,
+#                 inflows, deaths or removals.
 #   meta          title / description / reference (used by templates)
 #
 # Diagram positions are kept separately (see canvas.R) so that dragging a box
@@ -39,8 +42,14 @@ empty_model <- function() {
       stringsAsFactors = FALSE
     ),
     params = numeric(0),
+    special = character(0),  # closed model: no Source, no Sink
     meta = list(title = "", description = "", reference = "")
   )
+}
+
+#' Which of Source/Sink are on the diagram (older models: both).
+model_special <- function(model) {
+  if (is.null(model$special)) c(SOURCE_ID, SINK_ID) else model$special
 }
 
 #' Translate a compartment id (or SOURCE/SINK) to a display name.
@@ -194,7 +203,9 @@ regenerate_flow_expr <- function(model, i, keep_param = FALSE) {
 }
 
 #' Remove compartments (and every flow touching them) and flows from a model.
+#' `comp_ids` may also contain "SOURCE" / "SINK" to take them off the diagram.
 remove_elements <- function(model, comp_ids = character(0), flow_ids = character(0)) {
+  model$special <- setdiff(model_special(model), comp_ids)
   comps <- model$compartments
   flows <- model$flows
   comps <- comps[!comps$id %in% comp_ids, , drop = FALSE]

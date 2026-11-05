@@ -21,9 +21,12 @@ help_ui <- function() {
           " N (total living population) and t (time) are reserved."),
 
         h5("3. Draw a flow (arrow)"),
-        p("Click ", strong("Draw flow"), ", then press on a box and drag to another box.",
-          " Draw from the ", strong("Source"), " for births or inflow,",
-          " and into the ", strong("Sink"), " for deaths or removals."),
+        p("Click ", strong("Draw flow"), ", then press on a box and drag to another box."),
+        p("Models are ", strong("closed"), " by default: no animal enters or leaves.",
+          " For births or other inflows, press ", strong("+ Source"),
+          " above the diagram and draw arrows from it.",
+          " For deaths, culling or removals, press ", strong("+ Sink"),
+          " and draw arrows into it. Click a Source or Sink to remove it again."),
 
         h5("4. Set the rate of a flow"),
         p("Click an arrow. Choose its ", strong("type"), " and the formula is filled in for you:"),

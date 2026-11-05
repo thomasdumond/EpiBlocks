@@ -44,7 +44,7 @@ analyse_model <- function(model) {
   }
 
   # --- Flows ----------------------------------------------------------------
-  valid_ends <- c(comps$id, SOURCE_ID, SINK_ID)
+  valid_ends <- c(comps$id, model_special(model))
   exprs <- vector("list", nrow(flows))
   symbols <- character(0)
   for (i in seq_len(nrow(flows))) {

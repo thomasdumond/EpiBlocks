@@ -126,8 +126,13 @@ Click the new box to:
 
 Click **Draw flow**, then press on a box and drag to another box.
 
-- Draw **from the Source** for births or other inflows.
-- Draw **into the Sink** for deaths, culling or removal.
+Models are **closed** by default: no animal enters or leaves. To open the
+model, use the buttons above the diagram:
+
+- **+ Source (births, inflow)**, then draw arrows **from the Source**.
+- **+ Sink (deaths, removal)**, then draw arrows **into the Sink**.
+
+Click a Source or Sink to remove it again (its arrows are removed too).
 
 ### Set the rate of a flow
 

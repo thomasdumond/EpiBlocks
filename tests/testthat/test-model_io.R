@@ -23,6 +23,44 @@ test_that("deleting a compartment removes its flows", {
   expect_equal(nrow(m2$flows), 0)
 })
 
+test_that("models are closed by default; Source/Sink only when added", {
+  expect_length(empty_model()$special, 0)
+  # Templates are closed: no Source/Sink on the diagram
+  for (name in names(TEMPLATES)) {
+    m <- model_of(TEMPLATES[[name]])
+    expect_length(m$special, 0)
+    expect_false(any(c(SOURCE_ID, SINK_ID) %in% canvas_nodes(m, complete_positions(m, data.frame(id = character(0), x = numeric(0), y = numeric(0))))$id))
+  }
+  # A model whose flows use the Source and Sink shows them
+  spec <- list(
+    compartments = data.frame(name = "S", init = 100, in_N = TRUE),
+    flows = data.frame(from = c("SOURCE", "S"), to = c("S", "SINK"),
+                       type = c("constant", "linear"), expr = c("lambda", "mu * S"),
+                       infectious = "")
+  )
+  m <- model_of(spec)
+  expect_setequal(m$special, c(SOURCE_ID, SINK_ID))
+
+  # Removing the Source also removes its arrows
+  m2 <- remove_elements(m, SOURCE_ID)
+  expect_equal(m2$special, SINK_ID)
+  expect_equal(m2$flows$to, SINK_ID)
+})
+
+test_that("an added but unused Source is remembered when saving", {
+  s <- model_from_spec(tpl_SIR)
+  s$model$special <- SOURCE_ID
+  xy <- complete_positions(s$model, s$xy)
+  path <- tempfile(fileext = ".json")
+  writeLines(spec_to_json(spec_from_state(s$model, s$model$params, xy, list())), path)
+  expect_equal(model_from_spec(spec_from_json_file(path))$model$special, SOURCE_ID)
+
+  # and a closed model stays closed
+  s$model$special <- character(0)
+  writeLines(spec_to_json(spec_from_state(s$model, s$model$params, s$xy, list())), path)
+  expect_length(model_from_spec(spec_from_json_file(path))$model$special, 0)
+})
+
 test_that("every template loads and simulates without errors", {
   for (name in names(TEMPLATES)) {
     s <- model_from_spec(TEMPLATES[[name]])

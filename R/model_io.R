@@ -68,10 +68,18 @@ model_from_spec <- function(spec) {
   params <- unlist(spec$parameters %||% list())
   params <- stats::setNames(as.numeric(params), names(params))
 
+  # Source/Sink on the diagram: those listed in the file, plus any used by a
+  # flow (older files have no list: then only those used by a flow)
+  special <- intersect(
+    c(SOURCE_ID, SINK_ID),
+    c(unlist(spec$special_nodes), flows$from, flows$to)
+  )
+
   model <- list(
     compartments = comps[, c("id", "name", "init", "in_N")],
     flows = flows[, c("id", "from", "to", "type", "expr", "infectious")],
     params = params,
+    special = special,
     meta = list(
       title = spec$title %||% "",
       description = spec$description %||% "",
@@ -106,7 +114,7 @@ spec_from_state <- function(model, params, xy, settings) {
   infectious <- vapply(flows$infectious, function(x) {
     paste(comps$name[match(split_ids(x), comps$id)], collapse = ",")
   }, "", USE.NAMES = FALSE)
-  special <- xy[xy$id %in% c(SOURCE_ID, SINK_ID), ]
+  special <- xy[xy$id %in% model_special(model), ]
   used <- detect_parameters(model)
 
   list(
@@ -124,6 +132,7 @@ spec_from_state <- function(model, params, xy, settings) {
     ),
     parameters = as.list(params[intersect(used, names(params))]),
     settings = settings,
+    special_nodes = I(model_special(model)),   # I() keeps it a JSON array
     special_positions = lapply(seq_len(nrow(special)), function(i) {
       list(id = special$id[i], x = round(special$x[i]), y = round(special$y[i]))
     })

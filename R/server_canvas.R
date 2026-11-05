@@ -75,18 +75,61 @@ server_canvas <- function(input, output, session, rv) {
     rv$sel <- list(type = "none", id = NULL)
   })
 
-  observeEvent(input$net_bad_delete, {
-    showNotification("The Source and the Sink cannot be deleted.", type = "warning")
+  # --- Source / Sink: added only when the user wants an open model -------------
+  add_special <- function(id) {
+    model <- rv$model
+    if (id %in% model_special(model)) return()
+    model$special <- c(model_special(model), id)
+    rv$model <- model
+    rv$xy <- complete_positions(model, rv$xy[rv$xy$id != id, ])
+    pos <- rv$xy[rv$xy$id == id, ]
+    visUpdateNodes(proxy, data.frame(id = id, label = SPECIAL_LABELS[[id]],
+                                     group = "special", x = pos$x, y = pos$y))
+    rv$sel <- list(type = "special", id = id)
+  }
+  observeEvent(input$add_source, add_special(SOURCE_ID))
+  observeEvent(input$add_sink, add_special(SINK_ID))
+
+  # Remove the Source or Sink (button in the right panel); its arrows go too
+  observeEvent(input$special_delete, {
+    id <- rv$sel$id
+    req(identical(rv$sel$type, "special"))
+    gone_flows <- rv$model$flows$id[rv$model$flows$from == id | rv$model$flows$to == id]
+    rv$model <- remove_elements(rv$model, id)
+    rv$xy <- rv$xy[rv$xy$id != id, ]
+    visRemoveEdges(proxy, gone_flows)
+    visRemoveNodes(proxy, id)
+    rv$sel <- list(type = "none", id = NULL)
+  })
+
+  # Buttons above the diagram: only for the blocks not yet added
+  output$open_buttons <- renderUI({
+    missing <- setdiff(c(SOURCE_ID, SINK_ID), model_special(rv$model))
+    if (length(missing) == 0) return(NULL)
+    div(
+      class = "d-flex flex-wrap gap-2 align-items-center px-2 pt-2 small",
+      span(class = "text-muted",
+           if (length(missing) == 2) "Closed model. To add births or deaths:" else "Add:"),
+      if (SOURCE_ID %in% missing)
+        actionButton("add_source", "Source (births, inflow)", icon = icon("plus"),
+                     class = "btn-sm btn-outline-secondary py-0"),
+      if (SINK_ID %in% missing)
+        actionButton("add_sink", "Sink (deaths, removal)", icon = icon("plus"),
+                     class = "btn-sm btn-outline-secondary py-0")
+    )
   })
 
   # --- Selection: decides what the editor on the right shows ---------------------
   observeEvent(input$net_click, {
     ev <- input$net_click
-    nodes <- setdiff(unlist(ev$nodes), c(SOURCE_ID, SINK_ID))
+    all_nodes <- unlist(ev$nodes)
+    nodes <- setdiff(all_nodes, c(SOURCE_ID, SINK_ID))
     edges <- unlist(ev$edges)
     rv$sel <- if (length(nodes)) {
       list(type = "node", id = nodes[1])
-    } else if (length(unlist(ev$nodes)) == 0 && length(edges)) {
+    } else if (length(all_nodes)) {
+      list(type = "special", id = all_nodes[1])
+    } else if (length(edges)) {
       list(type = "edge", id = edges[1])
     } else {
       list(type = "none", id = NULL)

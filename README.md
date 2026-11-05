@@ -160,6 +160,9 @@ on the right with a default value that you can change.
 - Tick/untick boxes above the plot to show or hide them.
 - **Equations** shows the model as dN/dt = flows in − flows out.
 - **Table** → **Download CSV** for the numbers.
+- **R code** gives the model as a standalone deSolve script (parameters with
+  the values currently chosen, initial values, model function, `ode()` call
+  and a plot). **Copy** it into R or an R Markdown chunk, or **Download .R**.
 
 ### Keep your work
 
@@ -207,6 +210,7 @@ EpiBlocks/
 │   ├── ode_build.R     boxes + arrows -> ODEs (stoichiometry matrix); checks
 │   ├── solver.R        deSolve (lsoda), or base-R RK4 fallback; friendly errors
 │   ├── latex.R         equations as LaTeX for MathJax
+│   ├── rcode.R         the model as a standalone deSolve script ("R code" tab)
 │   ├── model_io.R      templates and saved files share one "spec" format (JSON)
 │   ├── templates.R     the ready-made models
 │   ├── canvas.R        the editable diagram (visNetwork + small JS handlers)

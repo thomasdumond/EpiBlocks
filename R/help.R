@@ -53,7 +53,9 @@ help_ui <- function() {
         p("Change parameter values and the epicurve updates straight away.",
           " Tick or untick compartments above the plot to show or hide them.",
           " The ", strong("Equations"), " tab shows the model as differential equations,",
-          " and the ", strong("Table"), " tab lets you download the results as CSV."),
+          " the ", strong("Table"), " tab lets you download the results as CSV,",
+          " and the ", strong("R code"), " tab gives the model as a ready-to-run deSolve",
+          " script with your current parameter values (Copy or Download .R)."),
 
         h5("6. Keep your work"),
         p(strong("Save"), " downloads your model as a .json file.",

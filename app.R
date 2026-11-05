@@ -10,6 +10,7 @@
 #   ode_build.R      boxes + arrows -> ODE system
 #   solver.R         solving the ODEs (deSolve, or a base-R fallback)
 #   latex.R          equations as LaTeX
+#   rcode.R          the model as a standalone R script ("R code" tab)
 #   model_io.R       templates and saved files (JSON)
 #   templates.R      the ready-made models
 #   canvas.R         the editable diagram (visNetwork)
@@ -53,6 +54,25 @@ ui <- page_sidebar(
           setTimeout(epiTypeset, 300);  // MathJax still loading: try again shortly
         }
       }
+      // Copy the R code to the clipboard (with a fallback for older browsers)
+      function epiCopyCode() {
+        var el = document.getElementById('rcode_text');
+        var btn = document.getElementById('copy_rcode');
+        if (!el) return;
+        var text = el.innerText;
+        var done = function () {
+          var old = btn.innerHTML;
+          btn.innerHTML = 'Copied!';
+          setTimeout(function () { btn.innerHTML = old; }, 1500);
+        };
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(text).then(done);
+        } else {
+          var ta = document.createElement('textarea');
+          ta.value = text; document.body.appendChild(ta); ta.select();
+          document.execCommand('copy'); document.body.removeChild(ta); done();
+        }
+      }
     ")),
     tags$script(src = "mathjax/tex-chtml.js", async = NA)
   ),
@@ -68,6 +88,8 @@ ui <- page_sidebar(
     /* vis-network toolbar: make it look like the rest of the app */
     div.vis-network div.vis-manipulation { background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
     .equations { overflow-x: auto; font-size: 1.05rem; }
+    #rcode_text { font-size: .85rem; background: #f8fafc; border: 1px solid #e2e8f0;
+                  border-radius: .375rem; padding: .75rem; white-space: pre; overflow-x: auto; }
     .help-text h5 { margin-top: 1rem; font-size: 1rem; font-weight: 600; }
   "))),
 
@@ -116,6 +138,16 @@ ui <- page_sidebar(
     nav_panel("Table",
               div(class = "mb-2", downloadButton("download_csv", "Download CSV", class = "btn-sm")),
               DT::DTOutput("results_table")),
+    nav_panel("R code", icon = icon("code"),
+              p(class = "text-muted small",
+                "The current model as a standalone R script (deSolve), with the parameter",
+                " values chosen on the right. Paste it into R or an R Markdown chunk."),
+              div(class = "mb-2 d-flex gap-2",
+                  tags$button(id = "copy_rcode", type = "button",
+                              class = "btn btn-sm btn-outline-secondary",
+                              onclick = "epiCopyCode()", icon("copy"), " Copy"),
+                  downloadButton("download_rcode", "Download .R", class = "btn-sm")),
+              uiOutput("rcode")),
     nav_panel("Help", icon = icon("circle-question"), help_ui())
   )
 )

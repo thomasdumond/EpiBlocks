@@ -134,6 +134,38 @@ server_outputs <- function(input, output, session, rv) {
                   options = list(pageLength = 15, scrollX = TRUE, dom = "tip"))
   })
 
+  # ===========================================================================
+  # R code: the model as a standalone deSolve script (see rcode.R)
+  # ===========================================================================
+  r_code <- reactive({
+    model <- rv$model
+    a <- analyse_model(model)
+    if (length(a$errors)) return(NULL)
+    model_r_code(model, rv$params, t_end = input$t_end, dt = input$dt)
+  })
+
+  output$rcode <- renderUI({
+    code <- r_code()
+    if (is.null(code)) {
+      return(div(class = "alert alert-warning py-2",
+                 "Fix the problems shown in the Epicurve tab to see the R code."))
+    }
+    tags$pre(id = "rcode_text", code)
+  })
+
+  output$download_rcode <- downloadHandler(
+    filename = function() {
+      title <- rv$model$meta$title %||% ""
+      base <- if (nzchar(title)) gsub("[^A-Za-z0-9]+", "_", title) else "my_model"
+      paste0(base, ".R")
+    },
+    content = function(file) {
+      code <- r_code()
+      if (is.null(code)) stop("Fix the model first.")
+      writeLines(code, file)
+    }
+  )
+
   output$download_csv <- downloadHandler(
     filename = function() paste0("epiblocks_results_", format(Sys.Date()), ".csv"),
     content = function(file) {

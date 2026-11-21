@@ -1,2 +1,8 @@
 # Third-party code: do not count it in GitHub language stats
 www/mathjax/** linguist-vendored
+
+# Left out of GitHub's "Download ZIP" (they stay in the repository), so the
+# ZIP holds only what goes on the server: app.R, R/, www/, tests/, README.md
+EpiBlocks.Rproj  export-ignore
+.gitignore       export-ignore
+.gitattributes   export-ignore

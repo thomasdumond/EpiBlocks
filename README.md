@@ -8,8 +8,7 @@ Users draw boxes (compartments) and arrows (flows), give each arrow a rate,
 and the app writes the differential equations, finds the parameters, solves
 the model and plots the epicurve. No coding needed.
 
-**▶ Try it online: <https://thomasdumond-epiblocks.share.connect.posit.cloud/>**
-(the first visit after a quiet period can take 30–60 s while the app wakes up)
+**▶ Try it online: <https://shiny.vet.unimelb.edu.au/epi/epi.blocks/>**
 
 > Beta version: tested by colleagues first, then used in a workshop.
 > Feedback is very welcome.
@@ -21,12 +20,14 @@ the model and plots the epicurve. No coding needed.
 You need **R ≥ 4.3** and, ideally, RStudio.
 
 1. Download or clone this folder.
-2. Double-click `EpiBlocks.Rproj` to open the project in RStudio.
-3. The first time only, install the exact package versions used by the app:
+2. Double-click `EpiBlocks.Rproj` to open the project in RStudio (if you
+   downloaded the ZIP, open `app.R` instead).
+3. The first time only, install the packages:
    ```r
-   renv::restore()
+   install.packages(c("shiny", "bslib", "visNetwork", "plotly", "DT",
+                      "jsonlite", "deSolve"))
    ```
-   (If renv is not installed: `install.packages("renv")` first.)
+   (deSolve is optional: without it the app uses its built-in solver.)
 4. Start the app:
    ```r
    shiny::runApp()
@@ -36,7 +37,7 @@ You need **R ≥ 4.3** and, ideally, RStudio.
 ### Run the tests
 
 ```r
-renv::install("testthat")   # once; tests are not needed to run the app
+install.packages("testthat")   # once; tests are not needed to run the app
 testthat::test_dir("tests/testthat")
 ```
 
@@ -49,27 +50,23 @@ output.
 
 ## 2. Put it online
 
-### Option A — Posit Connect Cloud (recommended, free)
+### On a Shiny Server (e.g. a university server)
 
-Connect Cloud runs regular R, so everything works, including deSolve.
+1. On GitHub, click **Code → Download ZIP** and unzip it. The ZIP contains
+   only `app.R`, `R/`, `www/`, `tests/` and `README.md`.
+2. Ask the server admin to install the packages once (same list as above):
+   ```r
+   install.packages(c("shiny", "bslib", "visNetwork", "plotly", "DT",
+                      "jsonlite", "deSolve"))
+   ```
+3. Copy the unzipped folder to the server's app directory (often
+   `/srv/shiny-server/epiblocks/`).
 
-1. Put this folder in a **public GitHub repository** (the free plan deploys
-   from public repositories).
-2. Connect Cloud reads the package list and R version from **`renv.lock`**,
-   which is already in the repository, so no extra file is needed. Do **not**
-   add a `manifest.json`: if both exist, Connect Cloud uses `manifest.json`
-   and ignores `renv.lock`.
-3. Go to <https://connect.posit.cloud>, sign in with GitHub, choose
-   **Publish → Shiny**, select the repository, the branch and `app.R`, then
-   **Publish**.
-4. Share the link. Every push to GitHub can redeploy the app.
+To update the app, download a new ZIP and replace the folder. The app uses no
+local file paths and needs no secrets. If it does not start, the error is in
+the server log (on Shiny Server usually `/var/log/shiny-server/`).
 
-After adding or updating a package, run `renv::snapshot()` and push the
-updated `renv.lock`.
-
-The app uses no local file paths and needs no secrets.
-
-### Option B — shinylive on GitHub Pages (runs entirely in the browser)
+### Alternative: shinylive on GitHub Pages (runs entirely in the browser)
 
 shinylive runs R inside the browser with webR, so no server is needed. Checked
 against the webR package repository:
@@ -219,7 +216,6 @@ EpiBlocks/
 ├── www/mathjax/        MathJax 4 (Apache 2.0), bundled so equations render
 │                       offline and behind proxies (copied from the mathjaxr package)
 ├── tests/testthat/     unit tests
-├── renv.lock           exact package versions
 └── EpiBlocks.Rproj
 ```
 
@@ -229,6 +225,7 @@ names, `+ - * / ^ (` and `exp log sqrt min max` are allowed. The checked
 formula is then evaluated in an environment that contains only those
 functions and whose parent is the empty environment.
 
-**Package versions** are locked with renv (`renv.lock`, R 4.3.1). After
-adding a package, run `renv::snapshot()`; Connect Cloud deploys from
-`renv.lock` directly.
+**Tested with** R 4.3.1, shiny 1.14.0, bslib 0.11.0, visNetwork 2.1.4,
+plotly 4.12.0, DT 0.34.0, jsonlite 2.0.0 and deSolve 1.42. Newer versions
+should work. If you add a package, add it to the `install.packages()` lists
+in sections 1 and 2.

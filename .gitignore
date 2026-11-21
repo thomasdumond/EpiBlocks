@@ -14,7 +14,7 @@
 *.key
 *.p12
 
-# Deployment account info written by rsconnect (manifest.json IS committed)
+# Deployment account info written by rsconnect
 rsconnect/
 
 # Local tools and OS files
@@ -22,3 +22,10 @@ rsconnect/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# renv: used locally only, not part of the app. The app runs on the server's
+# own R packages (see README). Keeping .Rprofile out of the repo matters: on a
+# server it would start renv and look for packages in an empty library.
+.Rprofile
+renv/
+renv.lock

@@ -130,6 +130,20 @@ test_that("one parameter name can be shared by several flows", {
   expect_equal(d[["R"]], 0.4 * 10)
 })
 
+test_that("the SIDRRem template gives the intended ODEs", {
+  m <- model_of(tpl_SIDRRem)
+  p <- c(beta = 0.002, delta = 0.5, gamma = 0.1, a = 0.5, sigma = 0.2, S0 = 1000)
+  rhs <- build_rhs(m, analyse_model(m), p)
+  y <- c(S = 600, I = 50, D = 30, R = 20, Rem = 300)
+  d <- rhs(0, y)
+  removal <- (0.5 * 600 / 1000 + 0.2) * 30
+  expect_equal(d[["S"]], -0.002 * 600 * 30)
+  expect_equal(d[["I"]], 0.002 * 600 * 30 - (0.5 + 0.1) * 50)
+  expect_equal(d[["D"]], 0.5 * 50 - removal)
+  expect_equal(d[["R"]], 0.1 * 50)
+  expect_equal(d[["Rem"]], removal)
+})
+
 test_that("parameters are detected from formulas", {
   m <- model_of(spec_SLADR)
   expect_setequal(detect_parameters(m),

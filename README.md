@@ -183,6 +183,7 @@ at time 0**, otherwise the curves stay flat.
 | SIS  | S, I    | no immunity, endemic equilibrium |
 | SEIR | S, E, I, R | latent period 1 / sigma |
 | SEEEEIIIIR | S, E1–E4, I1–I4, R | periods in 4 stages each; all E stages share sigma, all I stages share gamma |
+| SIDRRem | S, I, D, R, Rem | transmission from Dead animals; carcasses Removed by decay or by being eaten (a * S / S0) |
 
 To add a template, copy a block in `R/templates.R` and add it to `TEMPLATES`
 at the bottom of that file.

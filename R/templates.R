@@ -99,6 +99,37 @@ tpl_SEEEEIIIIR <- list(
                            list(id = "SINK", x = 1700, y = 350))
 )
 
+tpl_SIDRRem <- list(
+  title = "SIDRRem model: transmission from dead animals",
+  description = paste(
+    "Susceptible animals are infected by contact with Dead animals (density dependent,",
+    "beta * S * D). Infected animals die (delta) or Recover (gamma). Carcasses are",
+    "Removed by decay (sigma) or by being eaten (a * S / S0), which slows down as",
+    "fewer susceptible animals are left. S0 is the initial number of susceptible animals:",
+    "keep it equal to the initial value of S. Only living animals (S, I, R) count towards N.",
+    "Parameter values are illustrative."
+  ),
+  compartments = data.frame(
+    name = c("S", "I", "D", "R", "Rem"),
+    init = c(999, 0, 1, 0, 0),   # the epidemic starts with one dead animal
+    in_N = c(TRUE, TRUE, FALSE, TRUE, FALSE),
+    x = c(0, 220, 440, 220, 660),
+    y = c(0, 0, 0, 200, 0)
+  ),
+  flows = data.frame(
+    from = c("S", "I", "I", "D"),
+    to   = c("I", "D", "R", "Rem"),
+    type = c("infection_dens", "linear", "linear", "custom"),
+    expr = c("beta * S * D", "delta * I", "gamma * I", "(a * S / S0 + sigma) * D"),
+    infectious = c("D", "", "", "")
+  ),
+  parameters = list(beta = 0.002, delta = 0.5, gamma = 0.1,
+                    a = 0.5, sigma = 0.2, S0 = 999),
+  settings = list(t_end = 60, dt = 0.25),
+  special_positions = list(list(id = "SOURCE", x = -150, y = -150),
+                           list(id = "SINK", x = 810, y = 150))
+)
+
 tpl_SIS <- list(
   title = "SIS model",
   description = paste(
@@ -124,5 +155,6 @@ TEMPLATES <- list(
   "SI"    = tpl_SI,
   "SIS"   = tpl_SIS,
   "SEIR"  = tpl_SEIR,
-  "SEEEEIIIIR" = tpl_SEEEEIIIIR
+  "SEEEEIIIIR" = tpl_SEEEEIIIIR,
+  "SIDRRem"    = tpl_SIDRRem
 )

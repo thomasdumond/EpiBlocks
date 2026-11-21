@@ -62,6 +62,43 @@ tpl_SEIR <- list(
                            list(id = "SINK", x = 750, y = 150))
 )
 
+tpl_SEEEEIIIIR <- list(
+  title = "SEEEEIIIIR model: latent and infectious periods in stages",
+  description = paste(
+    "Like SEIR, but the latent period is split into 4 stages (E1 to E4) and the",
+    "infectious period into 4 stages (I1 to I4). All E stages share one rate, sigma,",
+    "and all I stages share one rate, gamma. The periods then follow a gamma",
+    "(Erlang) distribution instead of an exponential one: most animals stay close",
+    "to the mean, which is more realistic. Mean latent period = 4 / sigma (here 5 days),",
+    "mean infectious period = 4 / gamma (here 10 days), R0 = 4 * beta / gamma (here 5)."
+  ),
+  reference = paste(
+    "Wearing HJ, Rohani P, Keeling MJ (2005) Appropriate models for the management",
+    "of infectious diseases. PLoS Med 2(7):e174."
+  ),
+  compartments = data.frame(
+    name = c("S", paste0("E", 1:4), paste0("I", 1:4), "R"),
+    init = c(999, 0, 0, 0, 0, 1, 0, 0, 0, 0),
+    in_N = TRUE,
+    # Zigzag left to right: S, E1, I1 and R on top, the other stages below
+    x = c(0, 320, 360, 560, 750, 920, 1030, 1230, 1450, 1550),
+    y = c(0, 0, 200, 200, 200, 0, 200, 200, 200, 0)
+  ),
+  flows = data.frame(
+    from = c("S", paste0("E", 1:4), paste0("I", 1:4)),
+    to   = c(paste0("E", 1:4), paste0("I", 1:4), "R"),
+    type = c("infection_freq", rep("linear", 8)),
+    expr = c("beta * S * (I1 + I2 + I3 + I4) / N",
+             paste0("sigma * E", 1:4),
+             paste0("gamma * I", 1:4)),
+    infectious = c("I1,I2,I3,I4", rep("", 8))
+  ),
+  parameters = list(beta = 0.5, sigma = 0.8, gamma = 0.4),
+  settings = list(t_end = 150, dt = 0.5),
+  special_positions = list(list(id = "SOURCE", x = -150, y = -150),
+                           list(id = "SINK", x = 1700, y = 350))
+)
+
 tpl_SIS <- list(
   title = "SIS model",
   description = paste(
@@ -81,53 +118,11 @@ tpl_SIS <- list(
                            list(id = "SINK", x = 430, y = 150))
 )
 
-tpl_SLADR <- list(
-  title = "SLADR model: white spot disease in shrimp",
-  description = paste(
-    "White spot syndrome virus (WSSV) in a shrimp pond or tank.",
-    "Susceptible shrimp become Latently infected, then Acutely ill, then Dead.",
-    "Transmission comes from contact with acute shrimp (beta_A) and from eating dead shrimp",
-    "(cannibalism, beta_D). Sick shrimp are eaten by others (c_A), and carcasses disappear",
-    "by decay (delta) or by being eaten (c_D); both end in Removed.",
-    "Only living shrimp (S, L, A) count towards N. Time is in days.",
-    "Parameter values are illustrative: adapt them from the paper or your own data."
-  ),
-  reference = paste(
-    "Adapted from Lotz JM, Soto MA (2002) Model of white spot syndrome virus (WSSV)",
-    "epidemics in Litopenaeus vannamei. Dis Aquat Org 50:199-209."
-  ),
-  compartments = data.frame(
-    name = c("S", "L", "A", "D", "R"),
-    init = c(995, 0, 5, 0, 0),
-    in_N = c(TRUE, TRUE, TRUE, FALSE, FALSE),
-    x = c(0, 380, 580, 780, 680),
-    y = c(0, 0, 0, 0, 200)
-  ),
-  flows = data.frame(
-    from = c("S", "L", "A", "A", "D"),
-    to   = c("L", "A", "D", "R", "R"),
-    type = c("custom", "linear", "linear", "linear", "custom"),
-    expr = c(
-      "beta_A * S * A / N + beta_D * S * D / N",  # contact with acute + eating carcasses
-      "sigma * L",                                # end of latent period
-      "mu * A",                                   # death from disease
-      "c_A * A",                                  # sick shrimp eaten by others
-      "(delta + c_D) * D"                         # carcasses decay or are eaten
-    ),
-    infectious = c("A,D", "", "", "", "")
-  ),
-  parameters = list(beta_A = 0.3, beta_D = 1.5, sigma = 1, mu = 0.5,
-                    c_A = 0.1, delta = 0.3, c_D = 0.5),
-  settings = list(t_end = 40, dt = 0.1),
-  special_positions = list(list(id = "SOURCE", x = -150, y = -150),
-                           list(id = "SINK", x = 930, y = 200))
-)
-
 # Menu label = template. The first entry is loaded when the app starts.
 TEMPLATES <- list(
   "SIR"   = tpl_SIR,
   "SI"    = tpl_SI,
   "SIS"   = tpl_SIS,
   "SEIR"  = tpl_SEIR,
-  "SLADR (white spot disease, shrimp)" = tpl_SLADR
+  "SEEEEIIIIR" = tpl_SEEEEIIIIR
 )

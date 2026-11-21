@@ -44,7 +44,7 @@ test_that("the base-R RK4 fallback agrees with deSolve", {
 })
 
 test_that("closed models keep the total population constant", {
-  for (tpl in list(tpl_SI, tpl_SIR, tpl_SIS, tpl_SEIR, tpl_SLADR)) {
+  for (tpl in c(TEMPLATES, list(spec_SLADR))) {
     m <- model_of(tpl)
     res <- run_simulation(m, m$params, tpl$settings$t_end, tpl$settings$dt)
     expect_true(res$ok, info = tpl$title)
@@ -70,7 +70,7 @@ test_that("flows from the Source and into the Sink change the total", {
 })
 
 test_that("N only counts the ticked compartments", {
-  m <- model_of(tpl_SLADR)
+  m <- model_of(spec_SLADR)
   a <- analyse_model(m)
   rhs <- build_rhs(m, a, m$params)
   y <- c(S = 500, L = 0, A = 100, D = 400, R = 0)
@@ -116,8 +116,22 @@ test_that("useful warnings are given", {
   expect_match(run_simulation(m, m$params)$warnings, "Negative values", all = FALSE)
 })
 
+test_that("one parameter name can be shared by several flows", {
+  m <- model_of(tpl_SEEEEIIIIR)
+  expect_setequal(detect_parameters(m), c("beta", "sigma", "gamma"))
+
+  a <- analyse_model(m)
+  rhs <- build_rhs(m, a, c(beta = 0.5, sigma = 0.8, gamma = 0.4))
+  y <- c(S = 900, E1 = 10, E2 = 10, E3 = 10, E4 = 10, I1 = 20, I2 = 20, I3 = 10, I4 = 10, R = 0)
+  d <- rhs(0, y)
+  infection <- 0.5 * 900 * (20 + 20 + 10 + 10) / 1000   # all four I stages are infectious
+  expect_equal(d[["E1"]], infection - 0.8 * 10)
+  expect_equal(d[["I1"]], 0.8 * 10 - 0.4 * 20)          # in from E4 (sigma), out to I2 (gamma)
+  expect_equal(d[["R"]], 0.4 * 10)
+})
+
 test_that("parameters are detected from formulas", {
-  m <- model_of(tpl_SLADR)
+  m <- model_of(spec_SLADR)
   expect_setequal(detect_parameters(m),
                   c("beta_A", "beta_D", "sigma", "mu", "c_A", "delta", "c_D"))
 })

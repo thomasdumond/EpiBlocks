@@ -3,7 +3,7 @@
 **Build compartmental epidemic models by drawing them.**
 
 EpiBlocks is an R Shiny app for teaching compartmental ODE models (SI, SIR,
-SEIR, SIS, SLADR, …) in veterinary and aquatic animal health epidemiology.
+SEIR, SIS, …) in veterinary and aquatic animal health epidemiology.
 Users draw boxes (compartments) and arrows (flows), give each arrow a rate,
 and the app writes the differential equations, finds the parameters, solves
 the model and plots the epicurve. No coding needed.
@@ -144,7 +144,7 @@ Click an arrow and choose its **type**. A formula is filled in for you:
 | Custom formula                  | anything you type |
 
 For infections, tick which boxes are **infectious** (several are allowed, e.g.
-acute *and* dead shrimp). You can always edit the formula. A formula may
+acute *and* dead animals). You can always edit the formula. A formula may
 contain numbers, box names, parameter names, `N`, `t`, `+ - * / ^`, brackets
 and `exp()`, `log()`, `sqrt()`, `min()`, `max()`.
 
@@ -182,14 +182,7 @@ at time 0**, otherwise the curves stay flat.
 | SI   | S, I    | lifelong infection |
 | SIS  | S, I    | no immunity, endemic equilibrium |
 | SEIR | S, E, I, R | latent period 1 / sigma |
-| SLADR | S, L, A, D, R | white spot disease in shrimp |
-
-**SLADR** is adapted from Lotz JM, Soto MA (2002) *Model of white spot
-syndrome virus (WSSV) epidemics in Litopenaeus vannamei.* Dis Aquat Org
-50:199–209. Transmission comes from acute (A) and dead (D) shrimp,
-sick shrimp are eaten (c_A), and carcasses decay or are eaten (delta, c_D).
-**The parameter values are illustrative** and should be checked against the
-paper or replaced with your own data.
+| SEEEEIIIIR | S, E1–E4, I1–I4, R | periods in 4 stages each; all E stages share sigma, all I stages share gamma |
 
 To add a template, copy a block in `R/templates.R` and add it to `TEMPLATES`
 at the bottom of that file.

@@ -71,7 +71,7 @@ test_that("every template loads and simulates without errors", {
 })
 
 test_that("a saved model opens again identically", {
-  s <- model_from_spec(tpl_SLADR)
+  s <- model_from_spec(spec_SLADR)
   spec <- spec_from_state(s$model, s$model$params, s$xy, s$settings)
   path <- tempfile(fileext = ".json")
   writeLines(spec_to_json(spec), path)

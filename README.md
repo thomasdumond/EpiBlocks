@@ -10,8 +10,18 @@ the model and plots the epicurve. No coding needed.
 
 **▶ Try it online: <https://shiny.vet.unimelb.edu.au/epi/epi.blocks/>**
 
-> Beta version: tested by colleagues first, then used in a workshop.
-> Feedback is very welcome.
+> Version 1.0. Feedback is very welcome: thomas.dumond@adelaide.edu.au or a
+> GitHub issue.
+
+### How to cite
+
+> Dumond T (2026). EpiBlocks: build compartmental epidemic models by drawing
+> them (version 1.0). Adelaide University.
+> https://shiny.vet.unimelb.edu.au/epi/epi.blocks/ (accessed *date*).
+
+The app's **Cite** tab gives this citation with today's date, and as BibTeX.
+Author: Thomas Dumond, School of Animal and Veterinary Sciences, Adelaide
+University, Roseworthy Campus, Roseworthy, South Australia, Australia.
 
 ---
 

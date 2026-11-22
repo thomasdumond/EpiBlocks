@@ -15,6 +15,7 @@
 #   templates.R      the ready-made models
 #   canvas.R         the editable diagram (visNetwork)
 #   help.R           the Help tab
+#   cite.R           the Cite tab (version, citation, contact)
 #   server_*.R       the server logic, split by panel
 # =============================================================================
 
@@ -54,10 +55,16 @@ ui <- page_sidebar(
           setTimeout(epiTypeset, 300);  // MathJax still loading: try again shortly
         }
       }
-      // Copy the R code to the clipboard (with a fallback for older browsers)
-      function epiCopyCode() {
-        var el = document.getElementById('rcode_text');
-        var btn = document.getElementById('copy_rcode');
+      // Copy the R code to the clipboard
+      function epiCopyCode() { epiCopy('rcode_text', document.getElementById('copy_rcode')); }
+      // Open the Cite tab (link at the bottom of the page)
+      function epiShowCite() {
+        var tab = document.querySelector('a[data-value=\"Cite\"]');
+        if (tab) { tab.click(); tab.scrollIntoView({behavior: 'smooth', block: 'start'}); }
+      }
+      // Copy the text of an element to the clipboard (with a fallback for older browsers)
+      function epiCopy(id, btn) {
+        var el = document.getElementById(id);
         if (!el) return;
         var text = el.innerText;
         var done = function () {
@@ -91,6 +98,8 @@ ui <- page_sidebar(
     #rcode_text { font-size: .85rem; background: #f8fafc; border: 1px solid #e2e8f0;
                   border-radius: .375rem; padding: .75rem; white-space: pre; overflow-x: auto; }
     .help-text h5 { margin-top: 1rem; font-size: 1rem; font-weight: 600; }
+    .cite-text { font-size: .85rem; background: #f8fafc; border: 1px solid #e2e8f0;
+                 border-radius: .375rem; padding: .75rem; white-space: pre-wrap; }
   "))),
 
   # --- Right-hand panel: editor, parameters, settings -------------------------
@@ -148,8 +157,13 @@ ui <- page_sidebar(
                               onclick = "epiCopyCode()", icon("copy"), " Copy"),
                   downloadButton("download_rcode", "Download .R", class = "btn-sm")),
               uiOutput("rcode")),
-    nav_panel("Help", icon = icon("circle-question"), help_ui())
-  )
+    nav_panel("Help", icon = icon("circle-question"), help_ui()),
+    nav_panel("Cite", icon = icon("quote-right"), uiOutput("cite"))
+  ),
+  div(class = "text-center text-muted small mb-2",
+      "EpiBlocks ", APP_VERSION, " · Using it in teaching or research? See ",
+      tags$a(href = "#", onclick = "epiShowCite(); return false;", "how to cite",
+             .noWS = "after"), ".")
 )
 
 server <- function(input, output, session) {
@@ -168,6 +182,7 @@ server <- function(input, output, session) {
   server_editor(input, output, session, rv, proxy)
   server_outputs(input, output, session, rv)
   server_files(input, output, session, rv)   # also loads the first template
+  output$cite <- renderUI(cite_ui(Sys.Date()))   # "accessed" date = today
 }
 
 shinyApp(ui, server)

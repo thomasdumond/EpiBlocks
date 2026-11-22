@@ -89,7 +89,7 @@ cite_ui <- function(date = Sys.Date()) {
                          "Source code on GitHub"))
         ),
         h5("Version"),
-        p(paste0("EpiBlocks ", APP_VERSION, ". Free to use for teaching and research."))
+        p(paste0("EpiBlocks ", APP_VERSION, "."))
       )
     )
   )

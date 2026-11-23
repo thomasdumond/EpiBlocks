@@ -5,7 +5,9 @@ test_that("the citation has the version, the address and the accessed date", {
   expect_equal(cite_date(d), "2 November 2026")
 
   txt <- cite_text(d)
-  expect_match(txt, "^Dumond T \\(2026\\)\\. EpiBlocks")
+  expect_match(txt, "^Dumond T, Lee S \\(2026\\)\\. EpiBlocks")
+  expect_match(txt, "Adelaide University and The University of Melbourne.", fixed = TRUE)
+  expect_match(cite_bibtex(d), "author       = {Dumond, Thomas and Lee, Simin}", fixed = TRUE)
   expect_match(txt, "(version 1.0)", fixed = TRUE)
   expect_match(txt, APP_URL, fixed = TRUE)
   expect_match(txt, "(accessed 2 November 2026)", fixed = TRUE)

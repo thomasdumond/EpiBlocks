@@ -13,14 +13,29 @@ APP_URL     <- "https://shiny.vet.unimelb.edu.au/epi/epi.blocks/"
 APP_GITHUB  <- "https://github.com/thomasdumond/EpiBlocks"
 APP_EMAIL   <- "thomas.dumond@adelaide.edu.au"
 
-APP_AUTHOR_CITE <- "Dumond T"              # as written in the citation
-APP_AUTHOR_BIB  <- "Dumond, Thomas"        # BibTeX: "Last, First and Last, First"
-APP_AUTHOR_FULL <- "Thomas Dumond"
-APP_AFFILIATION <- paste(
-  "School of Animal and Veterinary Sciences, Adelaide University,",
-  "Roseworthy Campus, Roseworthy, South Australia, Australia"
+# Authors, in citation order. To add one, copy a block.
+#   cite         as written in the citation ("Last Initials")
+#   bib          for BibTeX ("Last, First")
+#   institution  short form used in the citation
+APP_AUTHORS <- list(
+  list(name = "Thomas Dumond", cite = "Dumond T", bib = "Dumond, Thomas",
+       affiliation = paste("School of Animal and Veterinary Sciences, Adelaide University,",
+                           "Roseworthy Campus, Roseworthy, South Australia, Australia"),
+       institution = "Adelaide University"),
+  list(name = "Simin Lee", cite = "Lee S", bib = "Lee, Simin",
+       affiliation = paste("Melbourne Veterinary School, Faculty of Science,",
+                           "The University of Melbourne, Parkville, VIC, Australia"),
+       institution = "The University of Melbourne")
 )
-APP_INSTITUTION <- "Adelaide University"   # short form used in the citation
+
+author_field <- function(field) vapply(APP_AUTHORS, `[[`, "", field)
+
+#' Institutions, each once, in author order: "A and B" (used in the citation).
+cite_institutions <- function() {
+  inst <- unique(author_field("institution"))
+  if (length(inst) <= 1) return(inst)
+  paste(paste(head(inst, -1), collapse = ", "), "and", tail(inst, 1))
+}
 
 #' Date as "22 November 2026" (no leading zero, English month names).
 cite_date <- function(date = Sys.Date()) {
@@ -31,7 +46,8 @@ cite_date <- function(date = Sys.Date()) {
 #' The citation as plain text.
 cite_text <- function(date = Sys.Date()) {
   sprintf("%s (%s). %s (version %s). %s. %s (accessed %s).",
-          APP_AUTHOR_CITE, APP_YEAR, APP_TITLE, APP_VERSION, APP_INSTITUTION,
+          paste(author_field("cite"), collapse = ", "), APP_YEAR, APP_TITLE,
+          APP_VERSION, cite_institutions(),
           APP_URL, cite_date(date))
 }
 
@@ -39,11 +55,11 @@ cite_text <- function(date = Sys.Date()) {
 cite_bibtex <- function(date = Sys.Date()) {
   paste0(
     "@misc{epiblocks,\n",
-    "  author       = {", APP_AUTHOR_BIB, "},\n",
+    "  author       = {", paste(author_field("bib"), collapse = " and "), "},\n",
     "  title        = {{EpiBlocks}: build compartmental epidemic models by drawing them},\n",
     "  year         = {", APP_YEAR, "},\n",
     "  version      = {", APP_VERSION, "},\n",
-    "  organization = {", APP_INSTITUTION, "},\n",
+    "  organization = {", cite_institutions(), "},\n",
     "  howpublished = {\\url{", APP_URL, "}},\n",
     "  note         = {Version ", APP_VERSION, ". Accessed ", cite_date(date), "}\n",
     "}"
@@ -78,8 +94,8 @@ cite_ui <- function(date = Sys.Date()) {
           "EpiBlocks has no paper or DOI yet. This page will be updated when it does.")
       ),
       div(
-        h5("Author"),
-        p(strong(APP_AUTHOR_FULL), br(), APP_AFFILIATION),
+        h5(if (length(APP_AUTHORS) > 1) "Authors" else "Author"),
+        lapply(APP_AUTHORS, function(a) p(strong(a$name), br(), a$affiliation)),
         h5("Contact and feedback"),
         p("Questions, bugs or ideas for new templates are very welcome."),
         tags$ul(

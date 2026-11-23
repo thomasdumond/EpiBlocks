@@ -15,13 +15,17 @@ the model and plots the epicurve. No coding needed.
 
 ### How to cite
 
-> Dumond T (2026). EpiBlocks: build compartmental epidemic models by drawing
-> them (version 1.0). Adelaide University.
-> https://shiny.vet.unimelb.edu.au/epi/epi.blocks/ (accessed *date*).
+> Dumond T, Lee S (2026). EpiBlocks: build compartmental epidemic models by
+> drawing them (version 1.0). Adelaide University and The University of
+> Melbourne. https://shiny.vet.unimelb.edu.au/epi/epi.blocks/ (accessed *date*).
 
 The app's **Cite** tab gives this citation with today's date, and as BibTeX.
-Author: Thomas Dumond, School of Animal and Veterinary Sciences, Adelaide
-University, Roseworthy Campus, Roseworthy, South Australia, Australia.
+
+Authors:
+- Thomas Dumond, School of Animal and Veterinary Sciences, Adelaide
+  University, Roseworthy Campus, Roseworthy, South Australia, Australia
+- Simin Lee, Melbourne Veterinary School, Faculty of Science, The University
+  of Melbourne, Parkville, VIC, Australia
 
 ---
 

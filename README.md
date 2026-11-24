@@ -143,6 +143,10 @@ model, use the buttons above the diagram:
 - **+ Source (births, inflow)**, then draw arrows **from the Source**.
 - **+ Sink (deaths, removal)**, then draw arrows **into the Sink**.
 
+Press the buttons again to add as many as you need (**+ Another Source**,
+**+ Another Sink**): they appear as Source 2, Sink 2, … For example, use one
+Sink for natural deaths and another for culling or harvest.
+
 Click a Source or Sink to remove it again (its arrows are removed too).
 
 ### Set the rate of a flow

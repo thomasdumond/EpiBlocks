@@ -59,7 +59,7 @@ server_canvas <- function(input, output, session, rv) {
     ev <- input$net_bad_edge
     msg <- if (identical(ev$from, ev$to)) {
       "An arrow must go from one box to a different box."
-    } else if (identical(ev$from, SINK_ID)) {
+    } else if (is_sink_id(ev$from)) {
       "Nothing can come out of the Sink. Draw arrows into the Sink for deaths or removals."
     } else {
       "Nothing can flow into the Source. Draw arrows out of the Source for births or inflow."
@@ -75,22 +75,24 @@ server_canvas <- function(input, output, session, rv) {
     rv$sel <- list(type = "none", id = NULL)
   })
 
-  # --- Source / Sink: added only when the user wants an open model -------------
-  add_special <- function(id) {
+  # --- Sources / Sinks: added only when the user wants an open model ----------
+  # As many as needed: each press adds one more (Source, Source 2, ...).
+  # @param base SOURCE_ID or SINK_ID
+  add_special <- function(base) {
     model <- rv$model
-    if (id %in% model_special(model)) return()
-    model$special <- c(model_special(model), id)
+    id <- next_special_id(base, model_special(model))
+    model$special <- sort_special(c(model_special(model), id))
     rv$model <- model
     rv$xy <- complete_positions(model, rv$xy[rv$xy$id != id, ])
     pos <- rv$xy[rv$xy$id == id, ]
-    visUpdateNodes(proxy, data.frame(id = id, label = SPECIAL_LABELS[[id]],
+    visUpdateNodes(proxy, data.frame(id = id, label = special_label(id),
                                      group = "special", x = pos$x, y = pos$y))
     rv$sel <- list(type = "special", id = id)
   }
   observeEvent(input$add_source, add_special(SOURCE_ID))
   observeEvent(input$add_sink, add_special(SINK_ID))
 
-  # Remove the Source or Sink (button in the right panel); its arrows go too
+  # Remove a Source or Sink (button in the right panel); its arrows go too
   observeEvent(input$special_delete, {
     id <- rv$sel$id
     req(identical(rv$sel$type, "special"))
@@ -102,28 +104,30 @@ server_canvas <- function(input, output, session, rv) {
     rv$sel <- list(type = "none", id = NULL)
   })
 
-  # Buttons above the diagram: only for the blocks not yet added
-  output$open_buttons <- renderUI({
-    missing <- setdiff(c(SOURCE_ID, SINK_ID), model_special(rv$model))
-    if (length(missing) == 0) return(NULL)
-    div(
-      class = "d-flex flex-wrap gap-2 align-items-center px-2 pt-2 small",
-      span(class = "text-muted",
-           if (length(missing) == 2) "Closed model. To add births or deaths:" else "Add:"),
-      if (SOURCE_ID %in% missing)
-        actionButton("add_source", "Source (births, inflow)", icon = icon("plus"),
-                     class = "btn-sm btn-outline-secondary py-0"),
-      if (SINK_ID %in% missing)
-        actionButton("add_sink", "Sink (deaths, removal)", icon = icon("plus"),
-                     class = "btn-sm btn-outline-secondary py-0")
-    )
+  # Buttons above the diagram (open_buttons_ui() in canvas.R) stay in place so
+  # more can be added; only their wording follows the model
+  open_state <- reactive({
+    special <- model_special(rv$model)
+    list(closed = length(special) == 0,
+         source = any(is_source_id(special)), sink = any(is_sink_id(special)))
+  })
+  output$open_prefix <- renderText(
+    if (open_state()$closed) "Closed model. To add births or deaths:" else "Add:"
+  )
+  observeEvent(open_state()$source, ignoreInit = FALSE, {
+    updateActionButton(session, "add_source", icon = icon("plus"),
+      label = if (open_state()$source) "Another Source" else "Source (births, inflow)")
+  })
+  observeEvent(open_state()$sink, ignoreInit = FALSE, {
+    updateActionButton(session, "add_sink", icon = icon("plus"),
+      label = if (open_state()$sink) "Another Sink" else "Sink (deaths, removal)")
   })
 
   # --- Selection: decides what the editor on the right shows ---------------------
   observeEvent(input$net_click, {
     ev <- input$net_click
     all_nodes <- unlist(ev$nodes)
-    nodes <- setdiff(all_nodes, c(SOURCE_ID, SINK_ID))
+    nodes <- all_nodes[!is_special_id(all_nodes)]
     edges <- unlist(ev$edges)
     rv$sel <- if (length(nodes)) {
       list(type = "node", id = nodes[1])

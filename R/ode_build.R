@@ -57,7 +57,7 @@ analyse_model <- function(model) {
     if (f$from == f$to) {
       errors <- c(errors, paste0("The flow ", label, " starts and ends at the same compartment."))
     }
-    if (f$from == SOURCE_ID && f$to == SINK_ID) {
+    if (is_source_id(f$from) && is_sink_id(f$to)) {
       errors <- c(errors, "A flow cannot go directly from the Source to the Sink.")
     }
     p <- parse_rate(f$expr)

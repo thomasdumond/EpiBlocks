@@ -169,7 +169,8 @@ check_name <- function(name, taken = character(0)) {
   if (name %in% RESERVED_NAMES) {
     return(paste0("'", name, "' is reserved (N = total population, t = time). Please choose another name."))
   }
-  if (name %in% c(ALLOWED_FUNCTIONS, "SOURCE", "SINK")) {
+  # SOURCE, SOURCE2, SINK, ... stand for the Sources and Sinks in saved files
+  if (name %in% ALLOWED_FUNCTIONS || grepl("^(SOURCE|SINK)[0-9]*$", name)) {
     return(paste0("'", name, "' is reserved. Please choose another name."))
   }
   if (name %in% taken) return(paste0("The name '", name, "' is already used."))

@@ -18,7 +18,8 @@
 #     settings = list(t_end = 100, dt = 0.5)
 #   )
 #
-# In flows, "SOURCE" and "SINK" stand for the Source and the Sink.
+# In flows, "SOURCE" and "SINK" stand for the Source and the Sink; further
+# ones are "SOURCE2", "SOURCE3", ... and "SINK2", "SINK3", ...
 # =============================================================================
 
 SPEC_VERSION <- 1
@@ -43,7 +44,7 @@ model_from_spec <- function(spec) {
   comps$id <- vapply(seq_len(nrow(comps)), function(i) new_id("c"), "")
 
   name_to_id <- function(x) {
-    out <- ifelse(x %in% c(SOURCE_ID, SINK_ID), x, comps$id[match(x, comps$name)])
+    out <- ifelse(is_special_id(x), x, comps$id[match(x, comps$name)])
     if (anyNA(out)) {
       stop("A flow refers to a compartment that does not exist: ",
            paste(unique(x[is.na(out)]), collapse = ", "), call. = FALSE)
@@ -70,10 +71,8 @@ model_from_spec <- function(spec) {
 
   # Source/Sink on the diagram: those listed in the file, plus any used by a
   # flow (older files have no list: then only those used by a flow)
-  special <- intersect(
-    c(SOURCE_ID, SINK_ID),
-    c(unlist(spec$special_nodes), flows$from, flows$to)
-  )
+  special <- unique(c(unlist(spec$special_nodes), flows$from, flows$to))
+  special <- sort_special(special[is_special_id(special)])
 
   model <- list(
     compartments = comps[, c("id", "name", "init", "in_N")],
@@ -108,7 +107,7 @@ spec_from_state <- function(model, params, xy, settings) {
   comps <- model$compartments
   pos <- xy[match(comps$id, xy$id), ]
   id_to_name <- function(x) {
-    ifelse(x %in% c(SOURCE_ID, SINK_ID), x, comps$name[match(x, comps$id)])
+    ifelse(is_special_id(x), x, comps$name[match(x, comps$id)])
   }
   flows <- model$flows
   infectious <- vapply(flows$infectious, function(x) {

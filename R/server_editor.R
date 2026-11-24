@@ -48,10 +48,10 @@ server_editor <- function(input, output, session, rv, proxy) {
     }
 
     if (identical(s$type, "special")) {
-      is_source <- identical(s$id, SOURCE_ID)
+      is_source <- is_source_id(s$id)
       return(tagList(
         h5(icon(if (is_source) "right-to-bracket" else "right-from-bracket"),
-           if (is_source) " Source" else " Sink"),
+           " ", special_name(s$id)),
         p(class = "small",
           if (is_source) {
             "Arrows drawn from the Source bring animals into the model (births, restocking, immigration)."
@@ -69,7 +69,7 @@ server_editor <- function(input, output, session, rv, proxy) {
       if (is.na(i)) return(editor_hint())
       f <- model$flows[i, ]
       comp_choices <- stats::setNames(model$compartments$id, model$compartments$name)
-      types <- if (f$from == SOURCE_ID) FLOW_TYPES[FLOW_TYPES %in% c("constant", "custom")] else FLOW_TYPES
+      types <- if (is_source_id(f$from)) FLOW_TYPES[FLOW_TYPES %in% c("constant", "custom")] else FLOW_TYPES
       return(tagList(
         h5(icon("arrow-right"), " Flow: ", flow_label(model, f)),
         selectInput("flow_type", "Type of flow", choices = types, selected = f$type,

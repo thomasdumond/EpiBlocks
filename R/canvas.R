@@ -12,7 +12,7 @@
 #   net_add_node   {id, x, y}         a box was placed on the canvas
 #   net_add_edge   {id, from, to}     an arrow was drawn
 #   net_bad_edge   {from, to}         an arrow that is not allowed was refused
-#   net_delete     {nodes, edges}     items were deleted (Source/Sink too)
+#   net_delete     {nodes, edges}     items were deleted (Sources/Sinks too)
 #   net_click      {nodes, edges}     the user clicked something (or nothing)
 #   net_drag       {pos}              boxes were moved (new positions)
 # =============================================================================
@@ -39,7 +39,8 @@ JS_ADD_NODE <- sprintf("function(data, callback) {
 
 # Refuse arrows that make no sense; Shiny shows the reason
 JS_ADD_EDGE <- sprintf("function(data, callback) {
-  var bad = data.from === data.to || data.from === 'SINK' || data.to === 'SOURCE';
+  var bad = data.from === data.to || /^SINK[0-9]*$/.test(data.from) ||
+            /^SOURCE[0-9]*$/.test(data.to);
   if (bad) {
     callback(null);
     Shiny.setInputValue('net_bad_edge', {from: data.from, to: data.to}, {priority: 'event'});
@@ -89,7 +90,8 @@ CANVAS_LOCALE <- list(
 # --- Positions ----------------------------------------------------------------
 
 #' Default positions for nodes that have none yet: compartments in a row,
-#' then the Source above-left and the Sink below-right of all the boxes.
+#' then Sources above-left and Sinks below-right of all the boxes (further
+#' ones side by side, so they do not sit on top of each other).
 complete_positions <- function(model, xy) {
   comps <- model$compartments
   # 1. Compartments without a position: in a row
@@ -99,19 +101,45 @@ complete_positions <- function(model, xy) {
     auto <- data.frame(id = comps$id, x = (seq_len(n) - 1) * 180, y = 0)
     xy <- rbind(xy, auto[auto$id %in% missing, , drop = FALSE])
   }
-  # 2. Source / Sink without a position: around the boxes
+  # 2. Sources / Sinks without a position: around the boxes. The first Source
+  #    and Sink always get one (used when they are added later).
   box_xy <- xy[xy$id %in% comps$id, , drop = FALSE]
   if (nrow(box_xy) == 0) box_xy <- data.frame(id = "", x = 0, y = 0)
-  special <- data.frame(
-    id = c(SOURCE_ID, SINK_ID),
-    x = c(min(box_xy$x) - 160, max(box_xy$x) + 160),
-    y = c(min(box_xy$y) - 140, max(box_xy$y) + 140)
-  )
-  rbind(xy, special[!special$id %in% xy$id, , drop = FALSE])
+  ids <- unique(c(SOURCE_ID, SINK_ID, model_special(model)))
+  ids <- ids[!ids %in% xy$id]
+  if (length(ids)) {
+    step <- (special_number(ids) - 1) * 180   # Source 2 right of Source, ...
+    src <- is_source_id(ids)
+    special <- data.frame(
+      id = ids,
+      x = ifelse(src, min(box_xy$x) - 160 + step, max(box_xy$x) + 160 - step),
+      y = ifelse(src, min(box_xy$y) - 140, max(box_xy$y) + 140)
+    )
+    xy <- rbind(xy, special)
+  }
+  xy
 }
 
-# Labels shown on the Source and Sink blocks
-SPECIAL_LABELS <- c(SOURCE = "Source\n(births, inflow)", SINK = "Sink\n(deaths, removal)")
+#' Buttons above the diagram to add Sources and Sinks. They are part of the
+#' page (not redrawn), so pressing one several times adds several blocks; the
+#' server only updates their wording (server_canvas.R).
+open_buttons_ui <- function() {
+  div(
+    class = "d-flex flex-wrap gap-2 align-items-center px-2 pt-2 small",
+    span(class = "text-muted", textOutput("open_prefix", inline = TRUE)),
+    actionButton("add_source", "Source (births, inflow)", icon = icon("plus"),
+                 class = "btn-sm btn-outline-secondary py-0"),
+    actionButton("add_sink", "Sink (deaths, removal)", icon = icon("plus"),
+                 class = "btn-sm btn-outline-secondary py-0")
+  )
+}
+
+#' Label shown on a Source or Sink block, e.g. "Source 2\n(births, inflow)".
+special_label <- function(id) {
+  if (length(id) == 0) return(character(0))
+  paste0(special_name(id), "\n",
+         ifelse(is_source_id(id), "(births, inflow)", "(deaths, removal)"))
+}
 
 
 # --- Building the diagram -------------------------------------------------------
@@ -119,10 +147,10 @@ SPECIAL_LABELS <- c(SOURCE = "Source\n(births, inflow)", SINK = "Sink\n(deaths, 
 #' Nodes data frame for visNetwork.
 canvas_nodes <- function(model, xy) {
   comps <- model$compartments
-  special <- intersect(c(SOURCE_ID, SINK_ID), model_special(model))  # only those added
+  special <- sort_special(model_special(model))  # only those added
   nodes <- data.frame(
     id    = c(special, comps$id),
-    label = c(unname(SPECIAL_LABELS[special]), comps$name),
+    label = c(special_label(special), comps$name),
     group = c(rep("special", length(special)), rep("compartment", nrow(comps))),
     stringsAsFactors = FALSE
   )

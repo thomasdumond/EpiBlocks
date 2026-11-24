@@ -11,23 +11,59 @@
 #                   in_N  TRUE if it counts towards N (living population)
 #   flows         data frame, one row per arrow:
 #                   id          internal id
-#                   from, to    compartment ids, or "SOURCE" / "SINK"
+#                   from, to    compartment ids, or a Source / Sink id
 #                   type        one of FLOW_TYPES (see below)
 #                   expr        the rate formula as text
 #                   infectious  for infection flows: ids of the infectious
 #                               compartments, comma separated
 #   params        named numeric vector of parameter values
-#   special       which of "SOURCE" / "SINK" are on the diagram. Empty for
-#                 a closed model (the default); users add them for births,
-#                 inflows, deaths or removals.
+#   special       ids of the Sources and Sinks on the diagram. Empty for a
+#                 closed model (the default); users add as many as they need
+#                 for births, inflows, deaths or removals. Ids: "SOURCE",
+#                 "SOURCE2", "SOURCE3", ... and "SINK", "SINK2", ...
 #   meta          title / description / reference (used by templates)
 #
 # Diagram positions are kept separately (see canvas.R) so that dragging a box
 # does not re-run the simulation.
 # =============================================================================
 
-SOURCE_ID <- "SOURCE"
-SINK_ID   <- "SINK"
+SOURCE_ID <- "SOURCE"   # the first Source; more are SOURCE2, SOURCE3, ...
+SINK_ID   <- "SINK"     # the first Sink;   more are SINK2, SINK3, ...
+
+is_source_id  <- function(x) grepl("^SOURCE[0-9]*$", x)
+is_sink_id    <- function(x) grepl("^SINK[0-9]*$", x)
+is_special_id <- function(x) is_source_id(x) | is_sink_id(x)
+
+#' Number of a Source/Sink: SOURCE -> 1, SOURCE2 -> 2, ...
+special_number <- function(id) {
+  n <- suppressWarnings(as.integer(sub("^(SOURCE|SINK)", "", id)))
+  ifelse(is.na(n), 1L, n)
+}
+
+#' Free id for a new Source or Sink: the lowest number not on the diagram.
+#' @param base SOURCE_ID or SINK_ID
+next_special_id <- function(base, taken) {
+  id <- base
+  i <- 2
+  while (id %in% taken) {
+    id <- paste0(base, i)
+    i <- i + 1
+  }
+  id
+}
+
+#' Sources first, then Sinks, each in number order.
+sort_special <- function(ids) {
+  ids[order(!is_source_id(ids), special_number(ids))]
+}
+
+#' Display name: "Source", "Source 2", "Sink", "Sink 3", ...
+special_name <- function(id) {
+  if (length(id) == 0) return(character(0))
+  kind <- ifelse(is_source_id(id), "Source", "Sink")
+  n <- special_number(id)
+  ifelse(n == 1, kind, paste(kind, n))
+}
 
 #' An empty model: no compartments, no flows.
 empty_model <- function() {
@@ -52,11 +88,10 @@ model_special <- function(model) {
   if (is.null(model$special)) c(SOURCE_ID, SINK_ID) else model$special
 }
 
-#' Translate a compartment id (or SOURCE/SINK) to a display name.
+#' Translate a compartment id (or a Source/Sink id) to a display name.
 node_name <- function(model, id) {
   vapply(id, function(i) {
-    if (identical(i, SOURCE_ID)) return("Source")
-    if (identical(i, SINK_ID)) return("Sink")
+    if (is_special_id(i)) return(special_name(i))
     nm <- model$compartments$name[model$compartments$id == i]
     if (length(nm)) nm else "?"
   }, character(1), USE.NAMES = FALSE)
@@ -101,7 +136,7 @@ default_param_base <- function(type, to) {
   switch(type,
     infection_freq = "beta",
     infection_dens = "beta",
-    linear   = if (identical(to, SINK_ID)) "mu" else "gamma",
+    linear   = if (is_sink_id(to)) "mu" else "gamma",
     constant = "lambda",
     "k"
   )
@@ -151,7 +186,7 @@ flow_formula <- function(type, from_name, inf_names, param) {
 
 #' Default type for a newly drawn arrow.
 default_flow_type <- function(from, to) {
-  if (identical(from, SOURCE_ID)) "constant" else "linear"
+  if (is_source_id(from)) "constant" else "linear"
 }
 
 #' Names used in a model's formulas that are parameters (i.e. not
@@ -198,12 +233,12 @@ regenerate_flow_expr <- function(model, i, keep_param = FALSE) {
   inf_names <- node_name(model, inf_ids[inf_ids %in% model$compartments$id])
   type <- f$type
   # A flow coming from the Source has no origin compartment to multiply by
-  if (identical(f$from, SOURCE_ID) && type != "constant") type <- "constant"
+  if (is_source_id(f$from) && type != "constant") type <- "constant"
   flow_formula(type, node_name(model, f$from), inf_names, param)
 }
 
 #' Remove compartments (and every flow touching them) and flows from a model.
-#' `comp_ids` may also contain "SOURCE" / "SINK" to take them off the diagram.
+#' `comp_ids` may also contain Source / Sink ids to take them off the diagram.
 remove_elements <- function(model, comp_ids = character(0), flow_ids = character(0)) {
   model$special <- setdiff(model_special(model), comp_ids)
   comps <- model$compartments

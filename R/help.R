@@ -26,7 +26,9 @@ help_ui <- function() {
           " For births or other inflows, press ", strong("+ Source"),
           " above the diagram and draw arrows from it.",
           " For deaths, culling or removals, press ", strong("+ Sink"),
-          " and draw arrows into it. Click a Source or Sink to remove it again."),
+          " and draw arrows into it. Press the buttons again to add more",
+          " (Source 2, Sink 2, …), e.g. one Sink for natural deaths and one for culling.",
+          " Click a Source or Sink to remove it again."),
 
         h5("4. Set the rate of a flow"),
         p("Click an arrow. Choose its ", strong("type"), " and the formula is filled in for you:"),
